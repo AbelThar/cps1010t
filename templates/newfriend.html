@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>add friend</h2>
+
+    <form method="post">
+      <label>
+        <div>enter username</div>
+        <tr>
+          <input type="text" name="target" value="{{target}}">
+        </tr>
+        <tr>
+          <input type="submit">
+        </tr>    
+      </label>
+
+      {% if status %}
+        
+        <label>
+          {% if status=="accepted" %}
+              <div>{{target}} is already a friend.</div>
+          {% elif status=="recieved" %}
+              <div>A friend request from {{target}} has already been recieved. Friend request has been accepted.</div>
+          {% elif status=="past_sent" %}
+              <div>A friend request to {{target}} has already been sent. Awaiting response from {{target}}</div>
+          {% elif status=="new_sent" %}
+              <div>A friend request to {{target}} has been sent.</div>
+          {% else %}
+              <div>{{target}} has not been found.</div>
+          {% endif %}
+        </label>
+
+      {% endif %}
+
+      <br>
+      <div class="error">{{error}}</div>
+
+    </form>
+{% endblock %}

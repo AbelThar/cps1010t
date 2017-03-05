@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+	<div class="interaction-area">
+	    {% if user %}
+	      <a class="interaction-link" href="/newfriend">add friend</a>
+	    {% endif %}
+    </div>
+
+	<br>
+
+	{% if recieved %}
+	<h2>recieved friend requests</h2>
+	<br>
+		{% for f in recieved %}
+			{{ f.render() | safe }}
+		{% endfor %}
+	{% endif %}
+
+	{% if online %}
+	<h2>online friends</h2>
+	<br>
+		{% for f in online %}
+			{{ f.render() | safe }}
+		{% endfor %}
+	{% endif %}
+
+	{% if offline %}
+	<h2>offline friends</h2>
+	<br>
+		{% for f in offline %}
+			{{ f.render() | safe }}
+		{% endfor %}
+	{% endif %}
+
+	{% if sent %}
+	<h2>sent friend requests</h2>
+	<br>
+		{% for f in sent %}
+			{{ f.render() | safe }}
+		{% endfor %}
+	{% endif %}
+
+{% endblock %}

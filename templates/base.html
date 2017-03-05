@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link type="text/css" rel="stylesheet" href="/static/main.css" />
+  <title>Board Games Online</title>
+</head>
+
+<body>
+  <a href="/" class="main-title">
+    <!-- <marquee>You can do anything on Zombo.com</marquee> -->
+    Board Games Online
+  </a>
+
+  <div class="login-area">
+    {% if user %}
+      <a class="login-link" href="/friends">friends</a>
+      <a class="login-link" href="/groups">groups</a>
+      <a class="login-link" href="/user">{{user.name}}</a>
+      <a class="login-link" href="/logout">logout</a>
+    {% else %}
+      <a class="login-link" href="/login">login</a>    
+      <a class="login-link" href="/signup">signup</a>
+    {% endif %}
+  </div>
+
+  <div id="content">
+  {% block content %}
+  {% endblock %}
+  </div>
+
+<div style="position: fixed; bottom: 30px;">    
+    Advertisements TBA
+</div>
+
+</body>
+
+</html>
+
