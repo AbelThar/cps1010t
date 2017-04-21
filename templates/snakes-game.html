@@ -1,0 +1,84 @@
+<style>
+  .parent {
+    position: relative;
+    top: 0;
+    left: 0;
+  }
+  .board {
+    position: relative;
+    top: 0;
+    left: 0;
+    width:800px;
+    height:800px;
+  }
+  .image1 {
+    position: absolute;
+    top: {{heib}}px;
+    left: {{leib}}px;
+    width:60px;
+    height:60px;
+  }
+  .image2 {
+    position: absolute;
+    top: {{heid}}px;
+    left: {{leid}}px;
+    width:60px;
+    height:60px;
+  }
+</style>
+
+{% extends "base.html" %}
+{% block content %}
+    <h2>Snakes and Ladders</h2> 
+    
+    <p><b>{{player1}}</b> - {{score1}} <span style="display:inline-block; 
+       margin-left: 200px;"><b>{{player2}}</b> - {{score2}}</span></p>
+
+     <form id="snakes" method="post"> 
+      <table>
+        <tr>
+          {% if wait %}     
+          <td>
+            Waiting for opponent
+          </td>
+          <td>
+            <marquee>...</marquee>
+          </td>
+          <script type="text/javascript">
+            addEvent("load", window, function(){
+              window.location.reload(true);})
+          </script>
+          {% elif state == 0 %}
+          <td>
+            Wish For Dice:
+          </td>
+          
+          <td>
+            <input type="number" name="wish" value="{{wish}}">
+          </td>
+
+          <td>
+            <input type="submit">
+          </td>
+          {% else %}
+          <td style="text-align: justify; text-justify: inter-word;">
+            {{msg|safe}}
+          </td>
+          <script type="text/javascript">
+            addEvent("load", window, function(){
+              forcepost(document.getElementById("snakes"));})
+          </script>
+          {% endif %}
+        </tr>
+      </table> 
+     </form> 
+
+    <br>
+    
+    <div class="parent">
+      <img src="/images/BoardSnakes.png" alt="board" class="board">
+      <img src="/images/bit.png" alt="bit" class="image1">
+      <img src="/images/doge.png" alt="doge" class="image2">
+    </div>
+{% endblock %}
+

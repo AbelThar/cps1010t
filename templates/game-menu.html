@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+		
+	<h2>{{game}} Setup - Select Opponent</h2>
+		
+		<br>
+
+		<form method="post">
+		<div class="post-title">
+		<label>
+				<input type="radio" name="player" value="" checked>
+				Single-Player - Play against a bot
+		</label>
+		</div>
+
+		<br>
+
+	<br>
+
+	{% if online or offline %}
+	<h2>Multiplayer - Play against a friend</h2>
+	<br>
+
+		{% if online %}
+		<h2>online friends</h2>
+			{% for f in online %}
+			<div> 
+				{{ f.game_render() | safe }}
+			</div>
+			{% endfor %}
+		{% endif %}
+
+		{% if offline %}
+		<h2>offline friends</h2>
+			{% for f in offline %}
+			<div> 
+				{{ f.game_render() | safe }}
+			</div>
+			{% endfor %}
+		{% endif %}
+		<br><br>
+	{% endif %}
+	
+		<input type="submit" value="Start {{game}}">
+
+		<div class="error">
+			{{error}}
+		</div>
+
+		</form>
+
+{% endblock %}

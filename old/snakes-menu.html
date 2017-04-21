@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+    
+  <h2>{{game}} Setup - Select Opponent</h2>
+    
+    <br>
+
+    <form method="post">
+    <div class="post-title">
+        <input type="radio" name="snakes" value="">
+        Single-Player - Play against a bot
+    </div>
+
+    <br>
+
+  <h2>Multiplayer</h2>
+
+    {% if online %}
+    <h2>online friends</h2>
+    <br>
+      {% for f in online %}
+      <div> 
+        {{ f.game_render() | safe }}
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    <br>
+
+    {% if offline %}
+    <h2>offline friends</h2>
+    <br>
+      {% for f in offline %}
+      <div> 
+        {{ f.game_render() | safe }}
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    <br>
+
+    <input type="submit">
+    </form>
+
+    <!-- <h2>Snakes and Ladders Setup</h2>
+    <form method="post">
+      <table>
+        <tr>
+          <td class="label">
+            Enter name of user to play with
+          </td>
+          <td>
+            <input type="text" name="player" value="{{player}}">
+          </td>
+        </tr>
+      </table>
+
+      <br>
+      <div>
+        Leave empty to play Single-Player
+      </div>
+      <br>
+
+      <br>
+      <div class="error">
+        {{error}}
+      </div>
+      <br>
+
+      <input type="submit">
+    </form> -->
+
+{% endblock %}

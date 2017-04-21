@@ -2,9 +2,27 @@
 
 {% block content %}
 
-  {% for p in posts %}
-    {{ p.render() | safe }}
-    <br><br>
-  {% endfor %}
+	<table>
+		<tr>
+			<td><img src="/images/snakes.png" alt="snakes" style="width:60px; height:60px;"></td>
+			<td style="text-align:center;">
+				<div class="game-area" align="center">
+					<a class="game-link" href="/snakes">Snakes and Ladders</a>
+				</div>
+			</td>
+		</tr>
+	</table>
+	<br>
+	<table>
+		<tr>
+			<td><img src="/images/battleship.png" alt="battleship" style="width:60px; height:60px;"></td>
+			<td style="text-align:center;">
+				<div class="game-area" align="center">
+					<a class="game-link" href="/battleships">Battleships</a>
+				</div>
+			</td>
+		</tr>
+	</table>
+
 
 {% endblock %}

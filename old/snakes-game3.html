@@ -1,0 +1,86 @@
+<style>
+  .parent {
+    position: relative;
+    top: 0;
+    left: 0;
+  }
+  .board {
+    position: relative;
+    top: 0;
+    left: 0;
+    width:800px;
+    height:800px;
+  }
+  .image1 {
+    position: absolute;
+    top: {{heib}}px;
+    left: {{leib}}px;
+    width:60px;
+    height:60px;
+  }
+  .image2 {
+    position: absolute;
+    top: {{heid}}px;
+    left: {{leid}}px;
+    width:60px;
+    height:60px;
+  }
+</style>
+
+{% extends "base.html" %}
+
+{% block content %}
+
+    <h2>Snakes and Ladders {{hei}}</h2> 
+    
+    <pre><b>{{player1}}</b> - {{score1}}         <b>{{player2}}</b> - {{score2}}</pre>
+
+     <form method="post"> 
+      <table>
+        <tr>
+          
+          {% if state == 0 %}
+          <td>
+            Input Number to Wish For:
+          </td>
+          
+          <td>
+            <input type="text" name="wish" value="{{wish}}">
+          </td>
+
+          <td>
+            <input type="submit">
+          </td>
+
+          {% elif state == 1 %}
+          <td>
+            {{msg}}
+          </td>
+          
+          {% elif state == 2 %}
+          <td>
+            Waiting for opponent
+          </td>
+          <td>
+            <marquee>...</marquee>
+          </td>
+          {% endif %}
+
+        </tr>
+      </table>
+    </form>
+    
+    <br>
+    
+    <div class="parent">
+      <img src="/images/BoardSnakes.png" alt="board" class="board">
+      <img src="/images/bit.png" alt="bit" class="image1">
+      <img src="/images/doge.png" alt="doge" class="image2">
+    </div>
+
+    <br>
+
+    <table>
+    </table>
+
+{% endblock %}
