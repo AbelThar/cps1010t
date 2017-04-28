@@ -1,0 +1,82 @@
+<style>
+  .parent {
+    position: relative;
+    top: 0;
+    left: 0;
+  }
+  .board {
+    position: relative;
+    top: 0;
+    left: -140;
+    width:1000px;
+    height:500px;
+  }
+  .image1 {
+    position: absolute;
+    top: {{heib}}px;
+    left: {{leib}}px;
+    width:60px;
+    height:60px;
+  }
+  .image2 {
+    position: absolute;
+    top: {{heid}}px;
+    left: {{leid}}px;
+    width:60px;
+    height:60px;
+  }
+</style>
+
+{% extends "base.html" %}
+{% block content %}
+    <h2>Battleships</h2> 
+    
+    <p><b>{{player1}}</b>  <span style="display:inline-block; 
+       margin-left: 200px;"><b>{{player2}}</b> </span></p>
+
+     <form id="battleships" method="post"> 
+      <table>
+        <tr>
+          {% if wait %}     
+          <td>
+            Waiting for opponent
+          </td>
+          <td>
+            <marquee>...</marquee>
+          </td>
+          <script type="text/javascript">
+            addEvent("load", window, function(){
+              window.location.reload(true);})
+          </script>
+          {% elif state == 0 %}
+          <td>
+            Input Next Command:
+          </td>
+          
+          <td>
+            <input type="character" name="next" value="{{next}}">
+          </td>
+
+          <td>
+            <input type="submit">
+          </td>
+          {% else %}
+          <td style="text-align: justify; text-justify: inter-word;">
+            {{msg|safe}}
+          </td>
+          <script type="text/javascript">
+            addEvent("load", window, function(){
+              forcepost(document.getElementById("battleships"));})
+          </script>
+          {% endif %}
+        </tr>
+      </table> 
+     </form> 
+
+    <br>
+    
+    <div class="parent">
+      <img src="/images/BSBoard.jpg" alt="board" class="board">
+      
+    </div>
+{% endblock %}

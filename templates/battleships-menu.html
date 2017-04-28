@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <h2>Battleships Setup</h2>
+    <form method="post">
+      <table>
+        <tr>
+          <td class="label">
+            Enter name of user to play with
+          </td>
+          <td>
+            <input type="text" name="player" value="{{player}}">
+          </td>
+        </tr>
+      </table>
+
+      <br>
+      <div>
+        Leave empty to play Single-Player
+      </div>
+      <br>
+
+      <br>
+      <div class="error">
+        {{error}}
+      </div>
+      <br>
+
+      <input type="submit">
+    </form>
+
+{% endblock %}
