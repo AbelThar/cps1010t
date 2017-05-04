@@ -37,7 +37,7 @@ File/Directory | Description
 - [ ] Games
 	- [ ] Single-Player
 		- [x] Snakes and Ladders
-		- [ ] Battleships
+		- [x] Battleships
 	- [ ] Multi-Player
 		- [x] Snakes and Ladders
 		- [ ] Battleships
