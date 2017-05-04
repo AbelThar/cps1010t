@@ -9,11 +9,15 @@ from operator import is_not
 from functools import partial
 from random import randint
 from time import sleep
+from datetime import date
+from protorpc import messages
+
 
 import webapp2
 import jinja2
 
 from google.appengine.ext import db
+from google.appengine.ext import ndb
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
@@ -358,6 +362,112 @@ class UserStat(WebHandler):
 		if self.user:
 			User.logout(self.user)
 
+class Battleships(db.Model):
+
+    player1 = db.ReferenceProperty(User, collection_name = "Battleships_p1")
+    player2 = db.ReferenceProperty(User, collection_name = "Battleships_p2")
+    
+    board_ship1 = db.IntegerProperty()
+    board_ship2 = db.IntegerProperty()
+    board_hit1 = db.BooleanProperty()
+    board_hit2 = db.BooleanProperty()
+    ships1 = db.IntegerProperty()
+    ships2 = db.IntegerProperty()
+    rows = db.IntegerProperty(required = True, default = 10)
+    columns = db.IntegerProperty(required=True, default=10)
+    turn = db.IntegerProperty(required=True, default=0)
+    shiptypes = db.IntegerProperty(required=True, default =5)
+    player1_turn = db.BooleanProperty(required=True, default=False)
+    player2_turn = db.BooleanProperty(required=True, default=False)
+    game_over = db.BooleanProperty(required=True, default=False)
+    
+    cpu = db.BooleanProperty() #BOT FUNCTION no bot yet 
+    state = db.IntegerProperty()
+    msg = db.StringProperty()
+
+class BattleshipsMenu(WebHandler):
+
+	def get(self):
+		if self.user:
+			self.render('battleships-menu.html')
+		else:
+			self.redirect("/login")
+
+	def post(self):
+		if not self.user:
+			self.redirect("/login")
+		
+		player = self.request.get('player')
+
+		if player!="":
+			user_p2 = User.by_name(player)
+
+			if user_p2 is None:
+				error = "Player Not Found" 
+				self.render("battleships-menu.html", error = error)
+
+			elif user_p2.name == self.user.name:
+				error = "Cannot play on your own. Try playing with a bot."
+				self.render("battleships-menu.html", error = error)
+
+			else:
+				opp = Battleships(player1 = self.user, player2 = user_p2, cpu = False, p1_turn = True, state = 0, waiter = True)
+				opp.put()
+				self.redirect('/battleshipsgame/%s' % str(opp.key().id()))
+
+		else:
+			opp = Battleships(player1 = self.user, cpu = True, p1_turn = True, state = 0)
+			opp.put()
+			self.redirect('/battleshipsgame/%s' % str(opp.key().id()))
+        
+class BattleshipsGame(WebHandler):
+	def get(self, session_id):
+	
+		if self.user:
+			sid = db.Key.from_path('Battleships', int(session_id))
+			battleships = db.get(sid)
+
+			if battleships:
+
+				if battleships.state == 6:
+					battleships.msg=""
+				
+				print "\n\nG:WUBBA LUBBA DUB DUB\n[",self.user.name,"]\n[1]:\t", battleships.msg,"\n[S]:\t", battleships.state,"\n\n"
+				print battleships.state
+				print "MRPPYBTTHLE"
+                
+				player2 = "Bot Bit" if battleships.cpu else battleships.player2.name
+
+				if self.user.name == battleships.player1.name or (not battleships.cpu and self.user.name == player2):
+					
+					waiting = not battleships.cpu and (self.user.name == battleships.player1.name and not battleships.p1_turn) or (self.user.name == player2 and battleships.p1_turn) #and battleships.state == 0
+					print "\n\nG1:WUBBA LUBBA DUB DUB\n[",self.user.name,"]\n[1]:\t", battleships.msg,"\n[wait]:\t", waiting,"\n[S]:\t", battleships.state,"\n\n"
+					
+					print "Ren"
+					self.render("battleships-game.html", wait=waiting, state=battleships.state, msg=battleships.msg, player1=battleships.player1.name, player2="Bot Bit" if battleships.cpu else battleships.player2.name)
+					print "Ren"
+
+					if battleships.state > 1 or waiting: #and battleships.state < 10:
+						sleep(2)
+
+				else:
+					self.redirect("/login")
+				
+			else:
+				self.redirect("/battleships")
+
+		else:
+			self.redirect("/login")
+		
+	def post(self, session_id ):
+            def clear(self):
+                os.system('tput reset') #clears the terminal window, does not just add new lines but deletes whats been written
+            sid = db.Key.from_path('Battleships', int(session_id))
+            battleships = db.get(sid)
+
+            
+#############################################################################################            
+            
 class Snakes(db.Model):
 	player1 = db.ReferenceProperty(User, collection_name = "snakes_p1")
 	player2 = db.ReferenceProperty(User, collection_name = "snakes_p2")
@@ -372,7 +482,6 @@ class Snakes(db.Model):
 	rec_wish = db.IntegerProperty()
 
 class SnakesMenu(WebHandler):
-
 	def get(self):
 		if self.user:
 			self.render('game-menu.html', game = "Snakes and Ladders", online = Friends.online(self.user), offline = Friends.offline(self.user))
@@ -727,6 +836,8 @@ app = webapp2.WSGIApplication([('/?', MainFront),
 							   ('/login', Login),
 							   ('/logout', Logout),
 							   ('/user', UserStat),
+                               ('/battleships', BattleshipsMenu),
+                               ('/battleshipsgame/([0-9]+)', BattleshipsGame),
 							   ('/snakes/?', SnakesMenu),
 							   ('/snakesgame/([0-9]+)', SnakesGame),
 							   ],

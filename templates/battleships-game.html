@@ -1,0 +1,481 @@
+<style>
+#container {
+	display: flex;
+	box-sizing: border-box;
+}
+#player1 {
+	width: 50%;
+}
+#player 2 {
+	width: 50%;
+}
+
+.playTable {
+	border: 1px solid black;
+	border-spacing: 0px;
+	background-color: #cccccc;
+}
+.playTable td {
+	border: 1px solid black;
+	width:40px;
+	height: 40px;
+	border-spacing: 0px;
+}
+#player1 td.ship.placed {
+	background-color: black;
+}
+/* A css preprocessor would be nice here. */
+.ship.hit:after {
+		display: block;
+		width:34px;
+		height: 34px;
+		margin-left: 3px;
+		background: red;
+		border-radius: 50%;
+		content: ' ';
+}
+.miss:after {
+		display: block;
+		width:34px;
+		height: 34px;
+		margin-left: 3px;
+		background: white;
+		border-radius: 50%;
+		content: ' ';
+}
+
+.ship.sunk {
+	background-color: red;
+}
+
+/* classes for each type of ship.
+ * In the future these could be enhanced with graphical representation 
+ */
+div.ship {
+	height: 34px;
+	background-color: blue;
+	border-radius: 6px;
+	margin: 5px;
+}
+div.ship2 {
+	width: 82px;
+	border-radius: 15px;
+	margin: 2px;
+}
+div.ship3 { 
+	width: 124px;
+	border-radius: 18px;
+	margin: 2px;
+}
+div.ship4 {
+	width: 170px;
+	border-radius: 20px;
+	margin: 2px;
+}
+div.ship5 {
+	width: 212px;
+	border-radius: 10px;
+	margin: 2px;
+}
+div.ship.placed {
+	position: absolute;
+}
+div.vertical {
+	/* TODO: Figure out why we need to scale the vertical to make it look good */
+	transform: rotate(90deg) scaleX(.92);
+	transform-origin: 20px 18px;
+
+}
+#player1 .ship.moving {
+	box-shadow: 2px 2px 2px 1px rgba(0, 0, 255, 0.2);
+	background-color: rgba(128,128,128,.5);
+	position: absolute;
+}
+
+</style>
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Battleships</h2> 
+
+<div id="message"></div>
+<div id="container">
+
+<div id="player1">
+	<h2>Player 1</h2>
+	<div class="board">
+	</div>
+</div>
+
+<div id="player2">
+	<h2>Computer</h2>
+	<div class="board">
+	</div>
+</div>
+
+</div>
+
+<script>
+var ROWS = 10;
+var COLS = 10;
+var SHIPS = [2, 3, 4, 5];
+var showMessage = function(message) {
+    messageContainer = document.getElementById('message').innerHTML = message;
+};
+var getElementPosition = function(element) {
+    var position = element.getBoundingClientRect();
+    position.left += window.scrollX;
+    position.top += window.scrollY;
+    return position;
+};
+var drawBoard = function() {
+    var i, row;
+    var board = document.createDocumentFragment();
+    var playTable = document.createElement('table');
+    playTable.className = 'playTable';
+
+    row = document.createElement('tr');
+    for (i = 0; i < COLS; i++) {
+        col = document.createElement('td');
+        row.appendChild(col);
+    }
+    for (i = 0; i < ROWS; i++) {
+        playTable.appendChild(row.cloneNode(true));
+    }
+
+
+    var boards = document.querySelectorAll('.board');
+    for (i = 0; i < boards.length; i++) {
+        boards[i].innerHTML = '';
+        boards[i].appendChild(playTable.cloneNode(true));
+    }
+
+};
+
+var showError = function(msg) {
+    // TODO: Prettier errors
+    showMessage(msg);
+};
+
+var checkCoord = function(board, row, col) {
+    var elem = ( row === null) ? board : board.querySelector('tr:nth-child(' + row + ') td:nth-child(' + col + ')', board);
+    if (!elem || elem.classList.contains('hit') || elem.classList.contains('miss')) {
+        return false;
+    }
+    if (elem.classList.contains('ship')) {
+        elem.classList.add('hit');
+        elem.setAttribute('title', 'Ship hit');
+        elem.classList.remove('placed');
+        return isShipSunk(elem);
+    } else {
+        elem.classList.add('miss');
+        elem.setAttribute('title', 'miss');
+        return 'miss';
+    }
+};
+
+var validateShipPlacement = function(initialElement, shipSize, shipOrientation) {
+    shipSize -= 0;
+    shipOrientation = shipOrientation || 'horizontal';
+    var col, row, currentElement, i;
+    if (shipOrientation === 'horizontal') {
+        // 1. Make sure it fits on the board
+        col = Array.prototype.indexOf.call(initialElement.parentNode.children, initialElement);
+        if ((COLS - col) < shipSize) {
+            return false;
+        }
+        // 2. Make sure there are no ships there
+        currentElement = initialElement;
+        for (i = 0; i < shipSize; i++) {
+            if (currentElement.className.indexOf('ship') != -1) {
+                return false;
+            }
+            currentElement = currentElement.nextElementSibling;
+        }
+        currentElement = initialElement;
+        // Go back through the list to place the ship
+        for (i = 0; i < shipSize; i++) {
+            currentElement.className += ' ship placed ship' + shipSize;
+            currentElement = currentElement.nextElementSibling;
+        }
+        return true;
+    } else {
+        // Vertical is very similar to horizontal. 
+        // TODO: Merge vertical and horizontal placement code?
+        var board = initialElement.closest('.board');
+        // 1. Make sure it fits on the board
+        // For rows, we go up two from the TD to the table to find the element
+        row = Array.prototype.indexOf.call(initialElement.parentNode.parentNode.children, initialElement.parentNode);
+        col = Array.prototype.indexOf.call(initialElement.parentNode.children, initialElement);
+        if ((ROWS - row) < shipSize) {
+            return false;
+        }
+        // 2. Make sure there are no ships there
+        var columnElements = board.querySelectorAll('tr td:nth-child(' + (col+1) + ')');
+        for (i = 0; i < shipSize; i++) {
+            if (columnElements[i + row].classList.contains('ship')) {
+                return false;
+            }
+        }
+        // Go back through the list to place the ship
+        for (i = 0; i < shipSize; i++) {
+            columnElements[i + row].className += ' ship vertical placed ship' + shipSize;
+        }
+        return true;
+    }
+};
+
+
+// This is a somewhat expensive operation. We could cache and filter results. 
+// However, this is still plenty fast for a game, so we just do it for each turn.
+// If this was to scale out to a massive board, then a more effecient approach would be warranted
+var getSpotsNearNonSunkHits = function() {
+	var player1 = document.getElementById('player1');
+	var hits = player1.querySelectorAll('td.hit:not(.sunk)');
+	var i, row, col, coords = [];
+	var rows = player1.querySelector('tr').parentNode.children;
+	for (i=0;i<hits.length;i++) {
+        row = Array.prototype.indexOf.call(rows, hits[i].closest('tr'))+1;
+        col = Array.prototype.indexOf.call(hits[i].parentNode.children, hits[i])+1;
+		coords.push([row-1,col],[row+1,col],[row,col-1],[row,col+1]);
+	}
+	return coords;
+};
+		
+var computerMove = function() {
+    showMessage('computer moving');
+    var row, col, result, elm, index;
+    // If the computer has no partially sunk ships, it will try to hit randomly
+    // If there are partials, it will try around them
+    // TODO: add smartness to optimize for ship size
+	var coordsToTry = getSpotsNearNonSunkHits();
+    do {
+        // Randomly pick elements near hits to try
+        if (coordsToTry.length) {
+			// get a random element to try
+			index = Math.floor(Math.random()*coordsToTry.length);
+            elm = coordsToTry.splice(index,1)[0];
+            row = elm[0];
+            col = elm[1];
+        } else {
+            row = Math.floor(Math.random() * ROWS) + 1;
+            col = Math.floor(Math.random() * COLS) + 1;
+        }
+        result = checkCoord(document.getElementById('player1'), row, col);
+    } while (!result);
+        if (result === 'game over') {
+            // Todo. Better restart. High score.
+            showMessage('GAME OVER. Computer won. Hit the Title Button to Return to the Main Menu!');
+            return;
+        }
+        humanMove();
+};
+
+var humanMove = function(firstTurn) {
+    var i;
+    if (firstTurn) {
+        showMessage('Click on your ships to move. Click on a square on computer board to fire your first shot to start the game.');
+    } else {
+        showMessage('Your turn. Click a square on the computer board to shoot a missle');
+    }
+    var player2 = document.getElementById('player2');
+    var _playermove = function(e) {
+        if (firstTurn) {
+            // Remove the 'moveable' ships
+            var allShips = document.querySelectorAll('div.ship');
+            for (i = 0; i < allShips.length; i++) {
+                allShips[i].remove();
+            }
+        }
+        if (e.target.tagName !== 'TD') {
+            showError('please click on the computer board');
+        } else if (e.target.classList.contains('hit') || e.target.classList.contains('miss')) {
+            showError('you have already tried there. Please try a different square');
+        } else {
+            player2.removeEventListener('click', _playermove);
+            if (checkCoord(e.target, null) === 'game over') {
+                showMessage("You WON! Hit the Title Button to Return to the Main Menu!");
+            } else {
+                // todo: this would work better as events
+                computerMove();
+            }
+        }
+    };
+    player2.addEventListener('click', _playermove);
+};
+
+var placeComputerShips = function() {
+    showMessage('computer placing ships');
+    var i, good;
+    // Uses brute-force place and check
+    // Works well for 'sparse' board, but could cause trouble
+    // if board is nearly full
+    for (i = 0; i < SHIPS.length; i++) {
+        good = false;
+        while (!good) {
+            // TODO: allow vertical ships
+            // nth-child selector is 1 based. Random numbers start at 0, so we floor and then add one.
+            var row = Math.floor(Math.random() * ROWS) + 1;
+            var col = Math.floor(Math.random() * COLS) + 1;
+            var initialCell = document.querySelector('#player2 tr:nth-child(' + row + ') td:nth-child(' + col + ')');
+			var orientation = (Math.random() >= .5) ? 'horizontal' : 'vertical';
+            good = validateShipPlacement(initialCell, SHIPS[i], orientation);
+        }
+    }
+}
+
+var placeShips = function() {
+    var dragMessage = 'Drag ships to place them on your board. Double click to rotate.';
+	showMessage(dragMessage);
+    var shipsToPlace = 0;
+    var player1 = document.getElementById('player1');
+
+    var _mousedown = function(e) {
+        e.preventDefault();
+        var i, that = this;
+        // Position is that of the top corner of element in viewport
+        // To get actual position, scrolling is added
+        // The offset is the difference from the top of object and the mouse
+        // That way user stays in the same position
+
+        // TODO: If the ship is already placed, we need to clear the cells
+        // underneath it on the board
+        // 1. get class of ship
+        // 2. find all items with class of ship
+        // 3. remove the ship, shipn and placed tags of those
+        var shipClass = that.className.match(/ship\d/)[0];
+        var shipCells = document.getElementById('player1').querySelectorAll('td.' + shipClass);
+        for (i = 0; i < shipCells.length; i++) {
+            shipCells.className = '';
+        }
+
+        var pos = getElementPosition(that);
+        var xOffset = e.clientX - pos.left;
+        var yOffset = e.clientY - pos.top;
+
+        that.style.left = pos.left;
+        that.style.top = pos.top;
+
+        // Set this after we calculate position to keep things in place
+        that.className += ' moving';
+
+        // Use global. We will need narrower later
+        var _mousemove = function(e) {
+            e.preventDefault();
+            that.style.top = e.clientY - yOffset;
+            that.style.left = e.clientX - xOffset;
+        };
+        var _mouseup = function(e) {
+            document.removeEventListener('mousemove', _mousemove);
+            document.removeEventListener('mouseup', _mouseup);
+            // snap to position: add 20 to each to get 'middle' of cell
+            // hide ship temporarily so we can find the square underneath
+            that.style.display = 'none';
+            var placedElem = document.elementFromPoint(e.clientX - xOffset + 20, e.clientY - yOffset + 20);
+            that.style.display = 'block';
+            that.classList.remove('moving');
+            if (!placedElem || (placedElem.tagName != 'TD') || (!player1.contains(placedElem))) {
+                showError('invalid ship placement');
+            } else {
+				showMessage(dragMessage);
+                // TODO: allow rotation
+                // TODO: validate we actually have the size (we should always...)
+                var shipSize = that.className.match(/ship(\d)/)[1];
+                // TODO: handle orientation
+                var shipOrientation = that.classList.contains('vertical') ? 'vertical' : 'horizontal';
+                if (validateShipPlacement(placedElem, shipSize, shipOrientation)) {
+					// Snap ship to position
+					var position = getElementPosition(placedElem);
+					that.style.left = position.left;
+					that.style.top = position.top;
+                    // keep track of first time placements
+                    if (!that.classList.contains('placed')) {
+                        shipsToPlace--;
+                        that.classList.add('placed');
+                    } else {
+                        // for moved ships, we need to remove old ship
+                        // We'll do the easy route - remove all then place again
+                        var shipSquares = player1.querySelectorAll('td.ship' + shipSize);
+                        for (i = 0; i < shipSquares.length; i++) {
+                            shipSquares[i].className = '';
+                        }
+                        validateShipPlacement(placedElem, shipSize, shipOrientation);
+                    }
+                    // TODO: allow moving ships
+                    if (!shipsToPlace) {
+                        showMessage('Click on spot on computer board to fire first shot. Or click on ships to start turn.');
+                        humanMove('first_move');
+					}
+                }
+            }
+        };
+
+
+        document.addEventListener('mousemove', _mousemove);
+        document.addEventListener('mouseup', _mouseup);
+        document.addEventListener('dblclick', _dblclick);
+    };
+	var _dblclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+		this.classList.toggle('vertical');
+	};
+    // Place ships and attach listeners to each ship
+    var board = document.querySelector('#player1 .board');
+    var shipDiv;
+
+    for (i = 0; i < SHIPS.length; i++) {
+        shipDiv = document.createElement('div');
+        shipDiv.setAttribute('title', 'drag to board to place');
+        shipDiv.setAttribute('class', 'ship ship' + SHIPS[i]);
+        board.appendChild(shipDiv)
+        shipDiv.addEventListener('mousedown', _mousedown, false);
+        shipDiv.addEventListener('dblclick', _dblclick, false);
+        shipsToPlace++;
+    }
+};
+
+var isShipSunk = function(elem) {
+    var type = elem.className.match(/ship\d/)[0];
+    var board = elem.closest('.board');
+    var shipSquares = board.querySelectorAll('td.' + type + ':not(.hit)');
+    if (shipSquares.length > 0) {
+        // just a hit, but not sunk
+        return 'hit';
+    }
+
+    shipSquares = board.querySelectorAll('td.' + type);
+    Array.prototype.forEach.call(shipSquares, function(shipElem) {
+        shipElem.classList.add('sunk');
+        shipElem.setAttribute('title', 'sunk ship');
+    });
+    var position = getElementPosition(shipSquares[0]);
+    var ship = document.createElement('div');
+    ship.className = 'placed ship ' + type;
+	if (elem.classList.contains('vertical')) {
+		ship.classList.add('vertical');
+	}
+    ship.style.top = position.top;
+    ship.style.left = position.left;
+    ship.setAttribute('title', 'sunk ship');
+    board.appendChild(ship);
+
+    // Ship is sunk, is the game over?
+    if (board.querySelectorAll('td.ship').length != board.querySelectorAll('td.hit').length) {
+        return 'sunk';
+    } else {
+        return 'game over';
+    }
+}
+
+// Wait untl DOM is loaded to start doing our magic
+document.addEventListener('DOMContentLoaded', function() {
+    drawBoard();
+    placeComputerShips();
+    // placeShips will start game loop after ships are placed
+    placeShips();
+});
+</script>
+
+
+{% endblock %}
